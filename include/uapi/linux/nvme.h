@@ -95,7 +95,10 @@ struct nvme_id_ns {
 	__u8			mc;
 	__u8			dpc;
 	__u8			dps;
-	__u8			rsvd30[98];
+	__u8			nmic;
+	__u8			rescap;
+	__u8			rsvd32[88];
+	__le64			eui64;
 	struct nvme_lbaf	lbaf[16];
 	__u8			rsvd192[192];
 	__u8			vs[3712];
