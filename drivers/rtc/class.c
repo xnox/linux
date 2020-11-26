@@ -54,6 +54,7 @@ static void rtc_hctosys(struct rtc_device *rtc)
 	struct timespec64 tv64 = {
 		.tv_nsec = NSEC_PER_SEC >> 1,
 	};
+	struct timespec64 now;
 
 	err = rtc_read_time(rtc, &tm);
 	if (err) {
@@ -71,10 +72,15 @@ static void rtc_hctosys(struct rtc_device *rtc)
 	}
 #endif
 
-	err = do_settimeofday64(&tv64);
+	ktime_get_real_ts64(&now);
 
-	dev_info(rtc->dev.parent, "setting system clock to %ptR UTC (%lld)\n",
-		 &tm, (long long)tv64.tv_sec);
+	/* Only set time, if userspace didn't already advance to today */
+	if (timespec64_compare(tv64, now) > 1) {
+		err = do_settimeofday64(&tv64);
+
+		dev_info(rtc->dev.parent, "setting system clock to %ptR UTC (%lld)\n",
+				 &tm, (long long)tv64.tv_sec);
+	}
 
 err_read:
 	rtc_hctosys_ret = err;
