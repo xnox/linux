@@ -1,0 +1,72 @@
+From 0c6bf67060d84066c3d1d7683b6317108e6e9d5a Mon Sep 17 00:00:00 2001
+From: Dimitri John Ledkov <dimitri.ledkov@canonical.com>
+Date: Mon, 9 May 2022 17:09:21 +0100
+Subject: [PATCH v4] Bluetooth: btintel: Correctly declare all module firmware
+ files
+
+Strictly encode patterns of supported hw_variants of firmware files
+the kernel driver supports requesting. This now includes many missing
+and previously undeclared module firmware files for 0x07, 0x08,
+0x11-0x14, 0x17-0x1b hw_variants.
+
+This especially affects environments that only install firmware files
+declared and referenced by the kernel modules. In such environments,
+only the declared firmware files are copied resulting in most Intel
+Bluetooth devices not working. I.e. host-only dracut-install initrds,
+or Ubuntu Core kernel snaps.
+
+BugLink: https://bugs.launchpad.net/bugs/1970819
+Signed-off-by: Dimitri John Ledkov <dimitri.ledkov@canonical.com>
+---
+ Changes since v3:
+ - Hopefully pacify trailing whitespace from GitLint in this optional
+   portion of the commit.
+
+ Changes since v2:
+ - encode patterns for 0x17 0x18 0x19 0x1b hw_variants
+ - rebase on top of latest rc tag
+
+ Changes since v1:
+ - encode strict patterns of supported firmware files for each of the
+   supported hw_variant generations.
+
+ drivers/bluetooth/btintel.c | 26 ++++++++++++++++++++++----
+ 1 file changed, 22 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/bluetooth/btintel.c b/drivers/bluetooth/btintel.c
+index a657e9a3e96a..55efc4a067db 100644
+--- a/drivers/bluetooth/btintel.c
++++ b/drivers/bluetooth/btintel.c
+@@ -2656,7 +2656,25 @@ MODULE_AUTHOR("Marcel Holtmann <marcel@holtmann.org>");
+ MODULE_DESCRIPTION("Bluetooth support for Intel devices ver " VERSION);
+ MODULE_VERSION(VERSION);
+ MODULE_LICENSE("GPL");
+-MODULE_FIRMWARE("intel/ibt-11-5.sfi");
+-MODULE_FIRMWARE("intel/ibt-11-5.ddc");
+-MODULE_FIRMWARE("intel/ibt-12-16.sfi");
+-MODULE_FIRMWARE("intel/ibt-12-16.ddc");
++/* hw_variant 0x07 0x08 */
++MODULE_FIRMWARE("intel/ibt-hw-37.7.*-fw-*.*.*.*.*.bseq");
++MODULE_FIRMWARE("intel/ibt-hw-37.7.bseq");
++MODULE_FIRMWARE("intel/ibt-hw-37.8.*-fw-*.*.*.*.*.bseq");
++MODULE_FIRMWARE("intel/ibt-hw-37.8.bseq");
++/* hw_variant 0x0b 0x0c */
++MODULE_FIRMWARE("intel/ibt-11-*.sfi");
++MODULE_FIRMWARE("intel/ibt-12-*.sfi");
++MODULE_FIRMWARE("intel/ibt-11-*.ddc");
++MODULE_FIRMWARE("intel/ibt-12-*.ddc");
++/* hw_variant 0x11 0x12 0x13 0x14 */
++MODULE_FIRMWARE("intel/ibt-17-*-*.sfi");
++MODULE_FIRMWARE("intel/ibt-18-*-*.sfi");
++MODULE_FIRMWARE("intel/ibt-19-*-*.sfi");
++MODULE_FIRMWARE("intel/ibt-20-*-*.sfi");
++MODULE_FIRMWARE("intel/ibt-17-*-*.ddc");
++MODULE_FIRMWARE("intel/ibt-18-*-*.ddc");
++MODULE_FIRMWARE("intel/ibt-19-*-*.ddc");
++MODULE_FIRMWARE("intel/ibt-20-*-*.ddc");
++/* hw_variant 0x17 0x18 0x19 0x1b, read and use cnvi/cnvr */
++MODULE_FIRMWARE("ibt-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9].sfi");
++MODULE_FIRMWARE("ibt-[0-9][0-9][0-9][0-9]-[0-9][0-9][0-9][0-9].ddc");
+-- 
+2.34.1
+
